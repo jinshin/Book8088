@@ -39,7 +39,7 @@
 	mov	ah,9
 	mov	dx,no_cga
 	int	21h
-	mov	ax,4C00h	;terminate with error
+	mov	ax,4C01h	;terminate with error
 	int	21h
 
 banner	db	'CGA Detect (C) 2023 Serhii Liubshin',0Dh,0Ah,'$'
