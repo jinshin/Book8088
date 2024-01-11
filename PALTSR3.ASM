@@ -6,6 +6,7 @@ begin:  jmp     inst
 
 ctrl    db      0
 pal	db	0
+busy	db	0
 
 txt	db	05Ah
 
@@ -35,20 +36,18 @@ P62	db 00000100b ;Burst On
 chkkey  proc
         in      al,60h
         cmp     al,1Dh
-        jne     n9
+        jne     not_ctrl_press
         mov     cs:ctrl,1
-n9:     cmp     al,9Dh
-        jne     ne9
+not_ctrl_press:     
+	cmp     al,9Dh
+        jne     not_ctrl_depress
         mov     cs:ctrl,0
-ne9:    cmp     al,29h
-        jne     nex9
+not_ctrl_depress:    
+	cmp     al,29h
+        jne     not_hk
         cmp	cs:ctrl,1
-	jne	nex9
-	xor	ax,ax
-	inc	ax
-	ret
-nex9:   xor	ax,ax
-	ret
+not_hk:
+	ret	;ZF set - key combo pressed
 chkkey	endp
 
 
@@ -96,31 +95,37 @@ endint  proc
         out     20h,al
         pop     ax
 	sti
+	call	palp
+	mov	cs:busy,0	
         iret
 endint  endp
 
 int9    proc
+	cli
         push    ax
+	cmp	cs:busy,1
+	je	exit9
 	call	chkkey
-	cmp	ax,0
-	jz	exit9	
-        cli
-        call    palp
+	jnz	exit9
+	mov	cs:busy,1
 	jmp	endint
-exit9:  pop     ax
+exit9:  
+	pop     ax
         db      0EAh
 old9    dd      0
 int9    endp
 
 int91   proc
+	cli
         push    ax
+	cmp	cs:busy,1
+	je	exit91
 	call	chkkey
-	cmp	ax,0
-	jz	exit91	
-        cli
-        call    palp
+	jnz	exit91
+	mov	cs:busy,1	
 	jmp	endint
-exit91: pop     ax
+exit91: 
+	pop     ax
         db      0EAh
 old91   dd      0	
 int91   endp
